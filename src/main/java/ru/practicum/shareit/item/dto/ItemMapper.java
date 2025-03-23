@@ -1,35 +1,22 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.Mapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 
 import java.util.List;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ItemMapper {
+@Mapper(componentModel = "spring")
+public interface ItemMapper {
 
-    public static Item toEntity(ItemDto dto) {
-        Item item = new Item();
-        item.setName(dto.getName());
-        item.setDescription(dto.getDescription());
-        item.setAvailable(dto.getAvailable());
-        if (dto.getRequest() != null)
-            item.setRequest(new ItemRequest(dto.getRequest().getId()));
-        return item;
-    }
+    Item toEntity(ItemDto dto);
 
-    public static ItemDto toDto(Item item) {
-        ItemDto dto = new ItemDto();
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        return dto;
-    }
+    ItemRequest toEntity(ItemRequestDto request);
 
-    public static List<ItemDto> toDto(List<Item> items) {
-        return items.stream().map(ItemMapper::toDto).toList();
-    }
+    ItemRequestDto toDto(ItemRequest request);
+
+    ItemDto toDto(Item item);
+
+    List<ItemDto> toDto(List<Item> items);
 }

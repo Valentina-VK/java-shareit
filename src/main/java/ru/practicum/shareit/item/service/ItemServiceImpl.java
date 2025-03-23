@@ -16,32 +16,34 @@ import java.util.List;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final ItemMapper mapper;
 
     @Override
     public List<ItemDto> getAll(Long userId) {
         userRepository.get(userId);
-        return ItemMapper.toDto(itemRepository.getAllItems(userId));
+        return mapper.toDto(itemRepository.getAllItems(userId));
     }
 
     @Override
     public ItemDto get(Long userId, Long itemId) {
         userRepository.get(userId);
-        return ItemMapper.toDto(itemRepository.getItem(itemId));
+        return mapper.toDto(itemRepository.getItem(itemId));
     }
 
     @Override
     public List<ItemDto> search(Long userId, String text) {
         userRepository.get(userId);
         if (text == null || text.isBlank()) return List.of();
-        return ItemMapper.toDto(itemRepository.searchByText(text.toLowerCase()));
+        return mapper.toDto(itemRepository.searchByText(text.toLowerCase()));
     }
 
     @Override
     public ItemDto save(Long userId, ItemDto item) {
         userRepository.get(userId);
-        Item newItem = ItemMapper.toEntity(item);
-        newItem.setOwnerId(userId);
-        return ItemMapper.toDto(itemRepository.saveItem(newItem));
+        Item newItem = mapper.toEntity(item);
+        if (newItem != null)
+            newItem.setOwnerId(userId);
+        return mapper.toDto(itemRepository.saveItem(newItem));
     }
 
     @Override
@@ -49,10 +51,10 @@ public class ItemServiceImpl implements ItemService {
         userRepository.get(userId);
         if (itemRepository.getItem(itemId).getOwnerId().longValue() != userId.longValue())
             throw new NoAccessException("Обновление данных доступно только владельцу вещи");
-        Item updatedItem = ItemMapper.toEntity(item);
+        Item updatedItem = mapper.toEntity(item);
         updatedItem.setId(itemId);
         updatedItem.setOwnerId(userId);
-        return ItemMapper.toDto(itemRepository.updateItem(updatedItem));
+        return mapper.toDto(itemRepository.updateItem(updatedItem));
     }
 
     @Override

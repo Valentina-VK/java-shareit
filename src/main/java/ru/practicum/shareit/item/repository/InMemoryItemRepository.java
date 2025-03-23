@@ -16,14 +16,16 @@ public class InMemoryItemRepository implements ItemRepository {
 
     public List<Item> getAllItems(Long userId) {
         return items.values().stream()
-                .filter(item -> item.getOwnerId().equals(userId)).toList();
+                .filter(item -> item.getOwnerId().equals(userId))
+                .toList();
     }
 
     public List<Item> searchByText(String text) {
         return items.values().stream()
                 .filter(item -> (item.getName().toLowerCase().contains(text)
                                  || item.getDescription().toLowerCase().contains(text))
-                                && item.getAvailable()).toList();
+                                && item.getAvailable())
+                .toList();
     }
 
     public Item getItem(Long itemId) {
