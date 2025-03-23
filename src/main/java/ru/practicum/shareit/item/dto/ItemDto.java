@@ -13,11 +13,11 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 public class ItemDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
-    @NotBlank
+    @NotBlank(message = "Поле name не может быть пустым")
     private String name;
-    @NotBlank
+    @NotBlank(message = "Поле description не может быть пустым")
     private String description;
-    @NotNull
+    @NotNull(message = "Поле available не может быть пустым")
     private Boolean available;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private ItemRequestDto request;

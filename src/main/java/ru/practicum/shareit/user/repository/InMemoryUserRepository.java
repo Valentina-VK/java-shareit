@@ -19,7 +19,8 @@ public class InMemoryUserRepository implements UserRepository {
     private long lastId = 0;
 
     public List<User> getAll() {
-        return users.values().stream().toList();
+        return users.values().stream()
+                .toList();
     }
 
     public User get(Long userId) {
