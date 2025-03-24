@@ -40,14 +40,8 @@ public class InMemoryItemRepository implements ItemRepository {
     }
 
     public Item updateItem(Item item) {
-        Item oldItem = items.get(item.getId());
-        if (item.getName() != null && !item.getName().isBlank())
-            oldItem.setName(item.getName());
-        if (item.getDescription() != null && !item.getDescription().isBlank())
-            oldItem.setDescription(item.getDescription());
-        if (item.getAvailable() != null)
-            oldItem.setAvailable(item.getAvailable());
-        return oldItem;
+        items.put(item.getId(), item);
+        return item;
     }
 
     public void deleteItem(Long itemId) {

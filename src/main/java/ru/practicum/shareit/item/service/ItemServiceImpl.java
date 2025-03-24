@@ -49,12 +49,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto item) {
         userRepository.get(userId);
-        if (itemRepository.getItem(itemId).getOwnerId().longValue() != userId.longValue())
+        Item oldItem =itemRepository.getItem(itemId);
+        if (oldItem.getOwnerId().longValue() != userId.longValue())
             throw new NoAccessException("Обновление данных доступно только владельцу вещи");
-        Item updatedItem = mapper.toEntity(item);
-        updatedItem.setId(itemId);
-        updatedItem.setOwnerId(userId);
-        return mapper.toDto(itemRepository.updateItem(updatedItem));
+        mapper.update(item, oldItem);
+        return mapper.toDto(itemRepository.updateItem(oldItem));
     }
 
     @Override

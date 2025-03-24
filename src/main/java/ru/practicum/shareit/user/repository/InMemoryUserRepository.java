@@ -29,7 +29,7 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     public User save(User newUser) {
-        if (isRegistered(newUser.getEmail())) throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
+        if (isRegisteredEmail(newUser.getEmail())) throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
         newUser.setId(getNextId());
         users.put(newUser.getId(), newUser);
         registeredEmails.add(newUser.getEmail());
@@ -37,13 +37,8 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     public User update(User user) {
-        User oldUser = users.get(user.getId());
-        if (user.getName() != null && !user.getName().isBlank()) oldUser.setName(user.getName());
-        if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            if (isRegistered(user.getEmail())) throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
-            oldUser.setEmail(user.getEmail());
-        }
-        return oldUser;
+        users.put(user.getId(), user);
+        return user;
     }
 
     public void delete(Long userId) {
@@ -54,7 +49,7 @@ public class InMemoryUserRepository implements UserRepository {
         return ++lastId;
     }
 
-    private boolean isRegistered(String email) {
+    public boolean isRegisteredEmail(String email) {
         return registeredEmails.contains(email);
     }
 }

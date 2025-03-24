@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exceptions.NotUniqueEmailException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -32,10 +33,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto update(Long userId, UserDto user) {
-        userRepository.get(userId);
-        User updatedUser = mapper.toEntity(user);
-        updatedUser.setId(userId);
-        return mapper.toDto(userRepository.update(updatedUser));
+        User oldUser = userRepository.get(userId);
+        if (!oldUser.getEmail().equals(user.getEmail())) {
+            if (userRepository.isRegisteredEmail(user.getEmail()))
+                throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
+        }
+        mapper.update(user, oldUser);
+        return mapper.toDto(userRepository.update(oldUser));
     }
 
     @Override

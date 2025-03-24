@@ -10,8 +10,4 @@ public class ItemRequest {
     private String description;
     private Long requestorId;
     private LocalDateTime created;
-
-    public ItemRequest(Long id) {
-        this.id = id;
-    }
 }

@@ -14,5 +14,7 @@ public interface UserRepository {
 
     User update(User user);
 
+    boolean isRegisteredEmail(String email);
+
     void delete(Long userId);
 }
