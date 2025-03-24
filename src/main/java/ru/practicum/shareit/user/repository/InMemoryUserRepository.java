@@ -29,7 +29,8 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     public User save(User newUser) {
-        if (isRegisteredEmail(newUser.getEmail())) throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
+        if (isRegisteredEmail(newUser.getEmail()))
+            throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
         newUser.setId(getNextId());
         users.put(newUser.getId(), newUser);
         registeredEmails.add(newUser.getEmail());
