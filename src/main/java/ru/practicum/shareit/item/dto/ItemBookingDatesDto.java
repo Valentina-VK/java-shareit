@@ -12,7 +12,7 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(exclude = {"available", "request"})
-public class ItemDto {
+public class ItemBookingDatesDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
     @NotBlank(message = "Поле name не может быть пустым")
@@ -24,4 +24,6 @@ public class ItemDto {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private ItemRequestDto request;
     private List<String> comments;
+    private String lastBooking;
+    private String nextBooking;
 }
