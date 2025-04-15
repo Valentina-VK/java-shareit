@@ -25,10 +25,11 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(exclude = {"available", "request"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
     @Column(name = "owner_id", nullable = false)
     private Long ownerId;

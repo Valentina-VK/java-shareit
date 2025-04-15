@@ -39,14 +39,8 @@ public class ItemServiceImpl implements ItemService {
         if (item.getOwnerId().equals(userId)) {
             List<Booking> bookings = bookingRepository.findByItemIdOrderByStart(itemId);
             if (bookings != null && !bookings.isEmpty()) {
-                lastBooking = bookings.stream()
-                        .filter(booking -> booking.getStatus().equals(BookingStatus.CANCELED))
-                        .map(Booking::getEnd)
-                        .max(Instant::compareTo).orElse(null);
-                nextBooking = bookings.stream()
-                        .filter(booking -> booking.getStatus().equals(BookingStatus.APPROVED))
-                        .map(Booking::getStart)
-                        .min(Instant::compareTo).orElse(null);
+                lastBooking = findLastApprovedBooking(bookings);
+                nextBooking = findNextApprovedBooking(bookings);
             }
         }
         return mapper.toBookingDatesDto(item, lastBooking, nextBooking);
@@ -56,7 +50,9 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> search(Long userId, String text) {
         validateService.checkUser(userId);
-        if (text == null || text.isBlank()) return List.of();
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
         return mapper.toDto(itemRepository.findByNameContainingIgnoreCaseAndAvailableTrue(text));
     }
 
@@ -64,7 +60,9 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto save(Long userId, ItemDto item) {
         validateService.checkUser(userId);
         Item newItem = mapper.toEntity(item);
-        if (newItem == null) throw new RuntimeException("Не удалось сохранить вещь");
+        if (newItem == null) {
+            throw new RuntimeException("Не удалось сохранить вещь");
+        }
         newItem.setOwnerId(userId);
         return mapper.toDto(itemRepository.save(newItem));
     }
@@ -73,8 +71,9 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto update(Long userId, Long itemId, ItemDto item) {
         validateService.checkUser(userId);
         Item oldItem = validateService.checkItem(itemId);
-        if (oldItem.getOwnerId().longValue() != userId.longValue())
+        if (oldItem.getOwnerId().longValue() != userId.longValue()) {
             throw new NoAccessException("Обновление данных доступно только владельцу вещи");
+        }
         mapper.update(item, oldItem);
         return mapper.toDto(itemRepository.save(oldItem));
     }
@@ -83,8 +82,25 @@ public class ItemServiceImpl implements ItemService {
     public void delete(Long userId, Long itemId) {
         validateService.checkUser(userId);
         Item item = validateService.checkItem(itemId);
-        if (item.getOwnerId().longValue() != userId.longValue())
+        if (item.getOwnerId().longValue() != userId.longValue()) {
             throw new NoAccessException("Удаление вещи доступно только владельцу");
+        }
         itemRepository.deleteById(itemId);
+    }
+
+    private Instant findLastApprovedBooking(List<Booking> bookings) {
+        return bookings.stream()
+                .filter(booking -> booking.getStatus().equals(BookingStatus.APPROVED) &&
+                                   booking.getStart().isBefore(Instant.now()))
+                .map(Booking::getStart)
+                .max(Instant::compareTo).orElse(null);
+    }
+
+    private Instant findNextApprovedBooking(List<Booking> bookings) {
+        return bookings.stream()
+                .filter(booking -> booking.getStatus().equals(BookingStatus.APPROVED) &&
+                                   booking.getStart().isAfter(Instant.now()))
+                .map(Booking::getStart)
+                .min(Instant::compareTo).orElse(null);
     }
 }

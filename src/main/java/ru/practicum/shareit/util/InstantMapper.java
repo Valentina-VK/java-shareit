@@ -11,8 +11,7 @@ public final class InstantMapper {
         if (date == null) {
             return null;
         }
-        String pattern = "yyyy-MM-dd'T'HH:mm:ss";
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(Constants.DATE_PATTERN);
         LocalDateTime localDateTime = LocalDateTime.parse(date, dateTimeFormatter);
         ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
         return zonedDateTime.toInstant();
@@ -23,7 +22,7 @@ public final class InstantMapper {
             return null;
         }
         return DateTimeFormatter
-                .ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                .ofPattern(Constants.DATE_PATTERN)
                 .withZone(ZoneId.systemDefault())
                 .format(instant);
     }

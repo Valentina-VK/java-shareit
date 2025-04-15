@@ -37,8 +37,9 @@ public class UserServiceImpl implements UserService {
     public UserDto update(Long userId, UserDto user) {
         User oldUser = validateService.checkUser(userId);
         if (!oldUser.getEmail().equals(user.getEmail())) {
-            if (userRepository.findByEmail(user.getEmail()).isPresent())
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
                 throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
+            }
         }
         mapper.update(user, oldUser);
         return mapper.toDto(userRepository.save(oldUser));

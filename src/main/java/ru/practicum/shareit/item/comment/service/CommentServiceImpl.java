@@ -23,8 +23,9 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto create(Long userId, Long itemId, NewCommentDto commentDto) {
         User user = validateService.checkUser(userId);
         Item item = validateService.checkItem(itemId);
-        if (!validateService.hasPastBooking(userId, itemId))
-            throw new NoAccessException("Отзывы доступны только пользователям с завершенным броннированием");
+        if (!validateService.hasPastBooking(userId, itemId)) {
+            throw new NoAccessException("Отзывы доступны только пользователям с завершенным бронированием");
+        }
         Comment newComment = mapper.toEntity(commentDto, user, item);
         Comment comment = commentRepository.saveAndFlush(newComment);
         return mapper.toDto(comment);

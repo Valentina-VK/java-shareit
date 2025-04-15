@@ -22,7 +22,7 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
 
-import static ru.practicum.shareit.util.HttpHeader.USER_ID;
+import static ru.practicum.shareit.util.Constants.USER_ID;
 
 @RestController
 @RequestMapping("/items")
