@@ -7,6 +7,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validateService.ValidateService;
 
 import java.util.List;
 
@@ -14,16 +15,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final ValidateService validateService;
     private final UserMapper mapper;
 
     @Override
     public List<UserDto> getAll() {
-        return mapper.toDto(userRepository.getAll());
+        return mapper.toDto(userRepository.findAll());
     }
 
     @Override
     public UserDto get(Long userId) {
-        return mapper.toDto(userRepository.get(userId));
+        return mapper.toDto(validateService.checkUser(userId));
     }
 
     @Override
@@ -33,17 +35,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto update(Long userId, UserDto user) {
-        User oldUser = userRepository.get(userId);
+        User oldUser = validateService.checkUser(userId);
         if (!oldUser.getEmail().equals(user.getEmail())) {
-            if (userRepository.isRegisteredEmail(user.getEmail()))
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
                 throw new NotUniqueEmailException("Указанный email уже зарегистрирован");
+            }
         }
         mapper.update(user, oldUser);
-        return mapper.toDto(userRepository.update(oldUser));
+        return mapper.toDto(userRepository.save(oldUser));
     }
 
     @Override
     public void delete(Long userId) {
-        userRepository.delete(userId);
+        userRepository.deleteById(userId);
     }
 }

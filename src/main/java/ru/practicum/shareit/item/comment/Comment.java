@@ -1,9 +1,7 @@
-package ru.practicum.shareit.booking.model;
+package ru.practicum.shareit.item.comment;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,32 +19,28 @@ import ru.practicum.shareit.user.model.User;
 import java.time.Instant;
 
 @Entity
-@Table(name = "bookings")
+@Table(name = "comments")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Booking {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "start_date", nullable = false)
-    private Instant start;
-
-    @Column(name = "end_date", nullable = false)
-    private Instant end;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private BookingStatus status = BookingStatus.WAITING;
-
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "booker_id")
-    private User booker;
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private Item item;
+
+    @Column(nullable = false)
+    private String text;
+
+    @Column(nullable = false)
+    private Instant created = Instant.now();
 }
