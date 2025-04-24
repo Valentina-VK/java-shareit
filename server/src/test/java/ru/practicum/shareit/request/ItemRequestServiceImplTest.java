@@ -121,7 +121,7 @@ class ItemRequestServiceImplTest {
         assertThat(result.size(), equalTo(1));
         assertThat(result.getFirst().getRequestor(), equalTo(requestor));
 
-        verify(requestRepository, times(1)).findAllByRequestorIdOrderByCreatedDesc(requestor.getId());
+        verify(requestRepository, times(1)).findAll(Sort.by(Sort.Direction.DESC, "created"));
         verify(mapper, times(1)).toDto(List.of(request));
     }
 
