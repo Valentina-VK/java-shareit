@@ -21,8 +21,6 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentDto create(Long userId, Long itemId, NewCommentDto commentDto) {
-        System.out.println("user" + userId);
-        System.out.println("item" + itemId);
         User user = validateService.checkUser(userId);
         Item item = validateService.checkItem(itemId);
         if (!validateService.hasPastBooking(userId, itemId)) {
