@@ -1,27 +1,21 @@
 package ru.practicum.shareit.booking;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.NewBookingDto;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.booking.selection.SelectionService;
-import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.NoAccessException;
 import ru.practicum.shareit.exceptions.NotAvailableException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.validateService.ValidateService;
+import ru.practicum.shareit.util.InstantMapper;
 
 import java.util.List;
 
@@ -29,236 +23,227 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 import static ru.practicum.shareit.TestConstant.NOT_EXISTING_ID;
 import static ru.practicum.shareit.TestConstant.NOT_OWNER_ID;
 import static ru.practicum.shareit.TestConstant.TIME_AFTER;
 import static ru.practicum.shareit.TestConstant.TIME_BEFORE;
 
-@ExtendWith(MockitoExtension.class)
+@Transactional
+@SpringBootTest
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BookingServiceImplTest {
-    @Mock
-    private BookingRepository bookingRepository;
-    @Mock
-    private ValidateService validateService;
-    @Mock
-    private BookingMapper mapper;
-    @Mock
-    private SelectionService selectionService;
-    @InjectMocks
-    private BookingServiceImpl bookingService;
-    private Item item;
-    private ItemDto itemDto;
-    private Booking booking;
-    private BookingDto bookingDto;
+    private final BookingService bookingService;
+    private BookingDto existingBooking;
     private NewBookingDto newBookingDto;
-    private User booker;
+    private UserDto booker;
+    private ItemDto item;
+    private final long ownerId = 11L;
 
     @BeforeEach
     void testInitialization() {
-        booker = new User();
+        booker = new UserDto();
+        booker = new UserDto();
         booker.setId(12L);
+        booker.setName("user2");
+        booker.setEmail("user12@yandex.ru");
 
-        item = new Item();
-        item.setId(1L);
-        item.setOwnerId(10L);
+        item = new ItemDto();
+        item.setId(31L);
+        item.setName("item1");
+        item.setDescription("description1");
         item.setAvailable(true);
+        item.setComments(List.of("test comment"));
 
-        itemDto = new ItemDto();
-        itemDto.setId(item.getId());
-
-        booking = new Booking();
-        booking.setId(111L);
-        booking.setStart(TIME_BEFORE);
-        booking.setEnd(TIME_AFTER);
-        booking.setStatus(BookingStatus.WAITING);
-        booking.setBooker(booker);
-        booking.setItem(item);
-
-        bookingDto = new BookingDto();
-        bookingDto.setId(booking.getId());
-        bookingDto.setStart(TIME_BEFORE.toString());
-        bookingDto.setEnd(TIME_AFTER.toString());
-        bookingDto.setStatus(booking.getStatus());
-        bookingDto.setBooker(new UserDto());
-        bookingDto.setItem(itemDto);
+        existingBooking = new BookingDto();
+        existingBooking.setId(41L);
+        existingBooking.setStatus(BookingStatus.APPROVED);
+        existingBooking.setBooker(booker);
+        existingBooking.setItem(item);
 
         newBookingDto = new NewBookingDto();
-        newBookingDto.setStart(TIME_BEFORE.toString());
-        newBookingDto.setEnd(TIME_AFTER.toString());
+        newBookingDto.setStart(InstantMapper.mapInstantToString(TIME_BEFORE));
+        newBookingDto.setEnd(InstantMapper.mapInstantToString(TIME_AFTER));
         newBookingDto.setItemId(item.getId());
     }
 
     @Test
     void addBooking_withValidFields_thenReturnResult() {
-        when(validateService.checkUser(booker.getId())).thenReturn(booker);
-        when(validateService.checkItem(newBookingDto.getItemId())).thenReturn(item);
-        when(mapper.toEntity(newBookingDto, booker, item)).thenReturn(booking);
-        when(mapper.toDto(booking)).thenReturn(bookingDto);
-        when(bookingRepository.save(booking)).thenReturn(booking);
 
         BookingDto result = bookingService.addBooking(booker.getId(), newBookingDto);
 
         assertThat(result, notNullValue());
-        assertThat(result.getId(), equalTo(bookingDto.getId()));
+        assertThat(result.getId(), equalTo(1L));
         assertThat(result.getItem().getName(), equalTo(item.getName()));
-
-        verify(validateService, times(1)).checkUser(booker.getId());
-        verify(validateService, times(1)).checkItem(newBookingDto.getItemId());
-        verify(bookingRepository, times(1)).save(booking);
-        verify(mapper, times(1)).toEntity(newBookingDto, booker, item);
-        verify(mapper, times(1)).toDto(booking);
+        assertThat(result.getStatus(), equalTo(BookingStatus.WAITING));
     }
 
     @Test
     void addBooking_withNotExistingUserId_thenThrowNotFoundException() {
-        when(validateService.checkUser(NOT_EXISTING_ID)).thenThrow(NotFoundException.class);
-
         assertThrows((NotFoundException.class), () -> bookingService.addBooking(NOT_EXISTING_ID, newBookingDto));
-
-        verify(validateService, times(1)).checkUser(NOT_EXISTING_ID);
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
     }
 
     @Test
     void addBooking_withNotExistingItemId_thenThrowNotFoundException() {
         newBookingDto.setItemId(NOT_EXISTING_ID);
-        when(validateService.checkItem(NOT_EXISTING_ID)).thenThrow(NotFoundException.class);
-
         assertThrows((NotFoundException.class), () -> bookingService.addBooking(booker.getId(), newBookingDto));
-
-        verify(validateService, times(1)).checkItem(NOT_EXISTING_ID);
-        verify(validateService, times(1)).checkUser(anyLong());
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
     }
 
     @Test
     void addBooking_withUserIdIsOwnerId_thenThrowNoAccessException() {
-        when(validateService.checkItem(newBookingDto.getItemId())).thenReturn(item);
-
-        assertThrows((NoAccessException.class), () -> bookingService.addBooking(item.getOwnerId(), newBookingDto));
-
-        verify(validateService, times(1)).checkItem(newBookingDto.getItemId());
-        verify(validateService, times(1)).checkUser(anyLong());
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
+        assertThrows((NoAccessException.class), () -> bookingService.addBooking(ownerId, newBookingDto));
     }
 
     @Test
     void addBooking_withNotAvailableItem_thenThrowValidationException() {
-        item.setAvailable(false);
-        when(validateService.checkItem(newBookingDto.getItemId())).thenReturn(item);
-
+        long notAvailableItemId = 33L;
+        newBookingDto.setItemId(notAvailableItemId);
         assertThrows((NotAvailableException.class), () -> bookingService.addBooking(booker.getId(), newBookingDto));
-
-        verify(validateService, times(1)).checkItem(newBookingDto.getItemId());
-        verify(validateService, times(1)).checkUser(anyLong());
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
     }
 
     @Test
     void changeStatus_withUserIdIsOwnerIdAndBookingExist_thenReturnResult() {
-        bookingDto.setStatus(BookingStatus.REJECTED);
-        when(validateService.checkBooking(booking.getId())).thenReturn(booking);
-        when(mapper.toDto(booking)).thenReturn(bookingDto);
-        when(bookingRepository.save(booking)).thenReturn(booking);
-
-        BookingDto result = bookingService.changeStatus(item.getOwnerId(), booking.getId(), false);
+        existingBooking.setStatus(BookingStatus.REJECTED);
+        BookingDto result = bookingService.changeStatus(ownerId, existingBooking.getId(), false);
 
         assertThat(result, notNullValue());
-        assertThat(result.getId(), equalTo(bookingDto.getId()));
-        assertThat(result.getStatus(), equalTo(bookingDto.getStatus()));
-
-        verify(validateService, times(1)).checkBooking(booking.getId());
-        verify(bookingRepository, times(1)).save(booking);
-        verify(mapper, times(1)).toDto(booking);
+        assertThat(result.getId(), equalTo(existingBooking.getId()));
+        assertThat(result.getStatus(), equalTo(existingBooking.getStatus()));
     }
 
     @Test
     void changeStatus_withUserIdIsNotOwnerId_thenThrowNoAccessException() {
-        when(validateService.checkBooking(booking.getId())).thenReturn(booking);
 
-        assertThrows((NoAccessException.class), () -> bookingService.changeStatus(booker.getId(), booking.getId(), false));
-
-        verify(validateService, times(1)).checkBooking(booking.getId());
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
+        assertThrows((NoAccessException.class),
+                () -> bookingService.changeStatus(booker.getId(), existingBooking.getId(), false));
     }
 
     @Test
     void changeStatus_withNotExistingBooking_thenThrowNotFoundException() {
-        when(validateService.checkBooking(NOT_EXISTING_ID)).thenThrow(NotFoundException.class);
-
         assertThrows((NotFoundException.class), () -> bookingService.changeStatus(booker.getId(), NOT_EXISTING_ID, false));
-
-        verify(validateService, times(1)).checkBooking(NOT_EXISTING_ID);
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
-
     }
 
     @Test
     void getById_withValidId_thenReturnResult() {
-        when(validateService.checkBooking(booking.getId())).thenReturn(booking);
-        when(mapper.toDto(booking)).thenReturn(bookingDto);
 
-        BookingDto result = bookingService.getById(item.getOwnerId(), booking.getId());
+        BookingDto result = bookingService.getById(ownerId, existingBooking.getId());
 
         assertThat(result, notNullValue());
-        assertThat(result.getId(), equalTo(bookingDto.getId()));
-        assertThat(result.getStatus(), equalTo(bookingDto.getStatus()));
-
-        verify(validateService, times(1)).checkBooking(booking.getId());
-        verify(mapper, times(1)).toDto(booking);
+        assertThat(result.getId(), equalTo(existingBooking.getId()));
+        assertThat(result.getStatus(), equalTo(existingBooking.getStatus()));
+        assertThat(result.getBooker(), equalTo(booker));
+        assertThat(result.getItem(), equalTo(item));
     }
 
     @Test
     void getById_withNotOwnerOrBookerId_thenThrowNoAccessException() {
-        when(validateService.checkBooking(booking.getId())).thenReturn(booking);
-
-        assertThrows((NoAccessException.class), () -> bookingService.getById(NOT_OWNER_ID, booking.getId()));
-
-        verify(validateService, times(1)).checkBooking(booking.getId());
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
+        assertThrows((NoAccessException.class), () -> bookingService.getById(NOT_OWNER_ID, existingBooking.getId()));
     }
 
     @Test
     void getById_withNotExistingBookingId_thenThrowNotFoundException() {
-        when(validateService.checkBooking(NOT_EXISTING_ID)).thenThrow(NotFoundException.class);
-
         assertThrows((NotFoundException.class), () -> bookingService.getById(booker.getId(), NOT_EXISTING_ID));
-
-        verify(validateService, times(1)).checkBooking(NOT_EXISTING_ID);
-        verifyNoMoreInteractions(validateService, bookingRepository, mapper);
     }
 
     @Test
-    void getByBooker_withValidBookerId_thenReturnResult() {
-        when(selectionService.handleByBooker(anyLong(), any(BookingSelectionState.class))).thenReturn(List.of(booking));
-        when(mapper.toDto(List.of(booking))).thenReturn(List.of(bookingDto));
-
+    void getByBooker_withValidBookerIdAndStateAll_thenReturnResult() {
         List<BookingDto> result = bookingService.getByBooker(booker.getId(), BookingSelectionState.ALL);
 
         assertThat(result, notNullValue());
-        assertThat(result.getFirst(), equalTo(bookingDto));
-
-        verify(selectionService, times(1)).handleByBooker(anyLong(), any(BookingSelectionState.class));
-        verify(mapper, times(1)).toDto(List.of(booking));
+        assertThat(result.size(), equalTo(5));
     }
 
     @Test
-    void getByOwner_withValidOwnerId_thenReturnResult() {
-        when(selectionService.handleByOwner(anyLong(), any(BookingSelectionState.class))).thenReturn(List.of(booking));
-        when(mapper.toDto(List.of(booking))).thenReturn(List.of(bookingDto));
-
-        List<BookingDto> result = bookingService.getByOwner(booker.getId(), BookingSelectionState.ALL);
+    void getByBooker_withValidBookerIdAndStateCURRENT_thenReturnResult() {
+        List<BookingDto> result = bookingService.getByBooker(booker.getId(), BookingSelectionState.CURRENT);
 
         assertThat(result, notNullValue());
-        assertThat(result.getFirst(), equalTo(bookingDto));
+        assertThat(result.size(), equalTo(2));
+    }
 
-        verify(selectionService, times(1)).handleByOwner(anyLong(), any(BookingSelectionState.class));
-        verify(mapper, times(1)).toDto(List.of(booking));
+    @Test
+    void getByBooker_withValidBookerIdAndStatePAST_thenReturnResult() {
+        List<BookingDto> result = bookingService.getByBooker(booker.getId(), BookingSelectionState.PAST);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+    }
+
+    @Test
+    void getByBooker_withValidBookerIdAndStateFUTURE_thenReturnResult() {
+        List<BookingDto> result = bookingService.getByBooker(booker.getId(), BookingSelectionState.FUTURE);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(2));
+    }
+
+    @Test
+    void getByBooker_withValidBookerIdAndStateWAITING_thenReturnResult() {
+        List<BookingDto> result = bookingService.getByBooker(booker.getId(), BookingSelectionState.WAITING);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(0));
+    }
+
+    @Test
+    void getByBooker_withValidBookerIdAndStateREJECTED_thenReturnResult() {
+        List<BookingDto> result = bookingService.getByBooker(booker.getId(), BookingSelectionState.REJECTED);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+    }
+
+    @Test
+    void getByOwner_withValidOwnerIdAndStateCURRENT_thenReturnResult() {
+
+        List<BookingDto> result = bookingService.getByOwner(ownerId, BookingSelectionState.CURRENT);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(2));
+    }
+
+    @Test
+    void getByOwner_withValidOwnerIdAndStatePAST_thenReturnResult() {
+
+        List<BookingDto> result = bookingService.getByOwner(ownerId, BookingSelectionState.PAST);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+        assertThat(result.getFirst().getId(), equalTo(existingBooking.getId()));
+    }
+
+    @Test
+    void getByOwner_withValidOwnerIdAndStateFUTURE_thenReturnResult() {
+
+        List<BookingDto> result = bookingService.getByOwner(ownerId, BookingSelectionState.FUTURE);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(3));
+    }
+
+    @Test
+    void getByOwner_withValidOwnerIdAndStateWAITING_thenReturnResult() {
+
+        List<BookingDto> result = bookingService.getByOwner(ownerId, BookingSelectionState.WAITING);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+    }
+
+    @Test
+    void getByOwner_withValidOwnerIdAndStateREJECTED_thenReturnResult() {
+
+        List<BookingDto> result = bookingService.getByOwner(ownerId, BookingSelectionState.REJECTED);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(1));
+    }
+
+    @Test
+    void getByOwner_withValidOwnerIdAndState_thenReturnResult() {
+
+        List<BookingDto> result = bookingService.getByOwner(ownerId, BookingSelectionState.ALL);
+
+        assertThat(result, notNullValue());
+        assertThat(result.size(), equalTo(6));
     }
 }

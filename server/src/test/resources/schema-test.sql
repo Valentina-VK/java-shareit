@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS item_requests (
   description VARCHAR(512) NOT NULL,
   created TIMESTAMP NOT NULL,
   CONSTRAINT pk_request PRIMARY KEY (id),
-  CONSTRAINT fk_request_to_users FOREIGN KEY(requestor_id) REFERENCES users(id)
+  CONSTRAINT fk_request_to_users FOREIGN KEY(requestor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS items (
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS items (
   available BOOLEAN DEFAULT true,
   request_id BIGINT DEFAULT null,
   CONSTRAINT pk_item PRIMARY KEY (id),
-  CONSTRAINT fk_items_to_users FOREIGN KEY(owner_id) REFERENCES users(id),
+  CONSTRAINT fk_items_to_users FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_item_to_request FOREIGN KEY(request_id) REFERENCES item_requests(id)
 );
 
@@ -41,8 +41,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   end_date TIMESTAMP NOT NULL,
   status VARCHAR(64) default 'WAITING' NOT NULL,
   CONSTRAINT pk_booking PRIMARY KEY (id),
-  CONSTRAINT fk_booking_to_users FOREIGN KEY(booker_id) REFERENCES users(id),
-  CONSTRAINT fk_booking_to_items FOREIGN KEY(item_id) REFERENCES items(id)
+  CONSTRAINT fk_booking_to_users FOREIGN KEY(booker_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_booking_to_items FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS comments
@@ -53,6 +53,6 @@ CREATE TABLE IF NOT EXISTS comments
     text text NOT NULL,
     created TIMESTAMP NOT NULL,
     CONSTRAINT pk_comments PRIMARY KEY (id),
-    CONSTRAINT fk_comment_to_items FOREIGN KEY(item_id) REFERENCES items(id),
-    CONSTRAINT fk_comment_to_users FOREIGN KEY(user_id) REFERENCES users(id)
+    CONSTRAINT fk_comment_to_items FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comment_to_users FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );

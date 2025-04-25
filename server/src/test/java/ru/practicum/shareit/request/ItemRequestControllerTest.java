@@ -13,7 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.NewItemRequestDto;
 import ru.practicum.shareit.request.service.ItemRequestService;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.util.Constants;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,8 +26,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ru.practicum.shareit.util.Constants.USER_ID;
-
 
 @WebMvcTest(controllers = ItemRequestController.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -37,11 +36,11 @@ class ItemRequestControllerTest {
     private final MockMvc mvc;
     private ItemRequestDto requestDto;
     private NewItemRequestDto newRequestDto;
-    private User requestor;
+    private UserDto requestor;
 
     @BeforeEach
     void testInitialization() {
-        requestor = new User();
+        requestor = new UserDto();
         requestor.setId(12L);
 
         newRequestDto = new NewItemRequestDto();
@@ -60,7 +59,7 @@ class ItemRequestControllerTest {
         when(requestService.createItemRequest(requestor.getId(), newRequestDto)).thenReturn(requestDto);
 
         mvc.perform(post("/requests")
-                        .header(USER_ID, requestor.getId())
+                        .header(Constants.USER_ID, requestor.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(newRequestDto)))
@@ -76,7 +75,7 @@ class ItemRequestControllerTest {
         when(requestService.getAllByUser(requestor.getId())).thenReturn(List.of(requestDto));
 
         mvc.perform(get("/requests")
-                        .header(USER_ID, requestor.getId())
+                        .header(Constants.USER_ID, requestor.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -89,7 +88,7 @@ class ItemRequestControllerTest {
         when(requestService.getAll()).thenReturn(List.of(requestDto));
 
         mvc.perform(get("/requests/all")
-                        .header(USER_ID, requestor.getId())
+                        .header(Constants.USER_ID, requestor.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -102,7 +101,7 @@ class ItemRequestControllerTest {
         when(requestService.getById(requestDto.getId())).thenReturn(requestDto);
 
         mvc.perform(get("/requests/{requestId}", requestDto.getId())
-                        .header(USER_ID, requestor.getId())
+                        .header(Constants.USER_ID, requestor.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

@@ -39,9 +39,8 @@ public class ValidateService {
     }
 
     public boolean hasPastBooking(Long userId, Long itemId) {
-        return bookingRepository.findByBookerIdAndItemIdAndStatusAndEndLessThan(userId, itemId,
-                        BookingStatus.APPROVED, Instant.now())
-                       .getFirst() != null;
+        return !bookingRepository.findByBookerIdAndItemIdAndStatusAndEndLessThan(userId, itemId,
+                BookingStatus.APPROVED, Instant.now()).isEmpty();
     }
 
     public ItemRequest checkRequest(Long requestId) {
