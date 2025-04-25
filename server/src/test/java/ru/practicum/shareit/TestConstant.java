@@ -9,8 +9,8 @@ public final class TestConstant {
 
     public static final long NOT_OWNER_ID = 13L;
     public static final Instant TIME_BEFORE = Instant.now()
-            .minus(Duration.ofDays(2)).
-            truncatedTo(ChronoUnit.SECONDS);
+            .minus(Duration.ofDays(2))
+            .truncatedTo(ChronoUnit.SECONDS);
     public static final Instant TIME_AFTER = Instant.now()
             .plus(Duration.ofDays(2))
             .truncatedTo(ChronoUnit.SECONDS);
