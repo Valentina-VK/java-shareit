@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.NoAccessException;
+import ru.practicum.shareit.exceptions.NotAvailableException;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.dto.NewCommentDto;
 import ru.practicum.shareit.item.comment.service.CommentService;
@@ -47,9 +48,9 @@ class CommentServiceImplTest {
     }
 
     @Test
-    void create_withUserIdIsBookerIdAndNotBookingInPast_thenThrowNoAccessException() {
+    void create_withUserIdIsBookerIdAndNotBookingInPast_thenThrowNotAvailableException() {
         long itemWithCurrentBooking = 32;
-        assertThrows((NoAccessException.class),
+        assertThrows((NotAvailableException.class),
                 () -> commentService.create(bookerId, itemWithCurrentBooking, newCommentDto));
     }
 }
