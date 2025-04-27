@@ -22,6 +22,7 @@ import ru.practicum.shareit.booking.dto.BookingState;
 
 import java.time.LocalDateTime;
 
+import static ru.practicum.shareit.util.Constants.ERROR_USER_ID;
 import static ru.practicum.shareit.util.Constants.USER_ID;
 
 
@@ -35,19 +36,18 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<Object> getBookings(@RequestHeader(USER_ID)
-                                              @Positive(message = "Id пользователя должен быть положительным числом") long userId,
+                                              @Positive(message = ERROR_USER_ID) long userId,
                                               @RequestParam(name = "state", defaultValue = "all") String stateParam,
                                               @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                               @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
-        BookingState state = BookingState.from(stateParam)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
+        BookingState state = BookingState.from(stateParam);
         log.info("Get booking with state {}, userId={}, from={}, size={}", stateParam, userId, from, size);
         return bookingClient.getBookings(userId, state, from, size);
     }
 
     @PostMapping
     public ResponseEntity<Object> bookItem(@RequestHeader(USER_ID)
-                                           @Positive(message = "Id пользователя должен быть положительным числом") long userId,
+                                           @Positive(message = ERROR_USER_ID) long userId,
                                            @RequestBody @Valid BookItemRequestDto requestDto) {
         log.info("Creating booking {}, userId={}", requestDto, userId);
         checkDatesBooking(requestDto.getStart(), requestDto.getEnd());
@@ -56,7 +56,7 @@ public class BookingController {
 
     @GetMapping("/{bookingId}")
     public ResponseEntity<Object> getBooking(@RequestHeader(USER_ID)
-                                             @Positive(message = "Id пользователя должен быть положительным числом") long userId,
+                                             @Positive(message = ERROR_USER_ID) long userId,
                                              @PathVariable long bookingId) {
         log.info("Get booking {}, userId={}", bookingId, userId);
         return bookingClient.getBooking(userId, bookingId);
@@ -64,7 +64,7 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public ResponseEntity<Object> changeStatus(@RequestHeader(USER_ID)
-                                               @Positive(message = "Id пользователя должен быть положительным числом") long ownerId,
+                                               @Positive(message = ERROR_USER_ID) long ownerId,
                                                @PathVariable long bookingId,
                                                @RequestParam boolean approved) {
         log.info("Update status {} for booking id {}, userId={}", approved, bookingId, ownerId);
@@ -73,11 +73,10 @@ public class BookingController {
 
     @GetMapping("/owner")
     public ResponseEntity<Object> getAllBookingsByOwner(@RequestHeader(USER_ID)
-                                                        @Positive(message = "Id пользователя должен быть положительным числом") long ownerId,
+                                                        @Positive(message = ERROR_USER_ID) long ownerId,
                                                         @RequestParam(name = "state", defaultValue = "all") String stateParam) {
         log.info("Get booking with state {}, ownerId={}", stateParam, ownerId);
-        BookingState state = BookingState.from(stateParam)
-                .orElseThrow(() -> new IllegalArgumentException("Неизвестный параметр state: " + stateParam));
+        BookingState state = BookingState.from(stateParam);
         return bookingClient.getByOwner(ownerId, state);
     }
 

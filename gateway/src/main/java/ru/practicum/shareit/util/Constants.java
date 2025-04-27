@@ -4,5 +4,5 @@ public final class Constants {
 
     public static final String USER_ID = "X-Sharer-User-Id";
 
-    public static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String ERROR_USER_ID = "Id пользователя должен быть положительным числом";
 }

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -62,97 +64,109 @@ class BookingControllerTest {
         newBookingDto.setItemId(ITEM_ID);
     }
 
-    @SneakyThrows
-    @Test
-    void create_withValidBody_thenReturnOK() {
-        when(bookingService.addBooking(ONE_USER_ID, newBookingDto)).thenReturn(bookingDto);
+    @Nested
+    @DisplayName("Tests for POST requests")
+    class testPostRequests {
+        @SneakyThrows
+        @Test
+        void create_withValidBody_thenReturnOK() {
+            when(bookingService.addBooking(ONE_USER_ID, newBookingDto)).thenReturn(bookingDto);
 
-        mvc.perform(post("/bookings")
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(newBookingDto)))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(bookingDto)));
+            mvc.perform(post("/bookings")
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(newBookingDto)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(mapper.writeValueAsString(bookingDto)));
 
-        verify(bookingService, times(1)).addBooking(ONE_USER_ID, newBookingDto);
+            verify(bookingService, times(1)).addBooking(ONE_USER_ID, newBookingDto);
+        }
+
+        @SneakyThrows
+        @Test
+        void create_withNotExistingItemId_thenReturnNotFound() {
+            newBookingDto.setItemId(NOT_EXISTING_ID);
+            when(bookingService.addBooking(ONE_USER_ID, newBookingDto)).thenThrow(NotFoundException.class);
+
+            mvc.perform(post("/bookings")
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(newBookingDto)))
+                    .andExpect(status().isNotFound());
+
+            verify(bookingService, times(1)).addBooking(ONE_USER_ID, newBookingDto);
+        }
     }
 
-    @SneakyThrows
-    @Test
-    void create_withNotExistingItemId_thenReturnNotFound() {
-        newBookingDto.setItemId(NOT_EXISTING_ID);
-        when(bookingService.addBooking(ONE_USER_ID, newBookingDto)).thenThrow(NotFoundException.class);
+    @Nested
+    @DisplayName("Tests for PATCH requests")
+    class testPatchRequests {
+        @SneakyThrows
+        @Test
+        void changeStatus_withValidParameter_thenReturnOK() {
+            when(bookingService.changeStatus(ONE_USER_ID, bookingDto.getId(), true)).thenReturn(bookingDto);
 
-        mvc.perform(post("/bookings")
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(newBookingDto)))
-                .andExpect(status().isNotFound());
+            mvc.perform(patch("/bookings/{bookingId}", bookingDto.getId())
+                            .header(USER_ID, ONE_USER_ID)
+                            .param("approved", String.valueOf(true))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(BookingStatus.APPROVED.name()));
 
-        verify(bookingService, times(1)).addBooking(ONE_USER_ID, newBookingDto);
+            verify(bookingService, times(1)).changeStatus(ONE_USER_ID, bookingDto.getId(), true);
+        }
     }
 
-    @SneakyThrows
-    @Test
-    void changeStatus_withValidParameter_thenReturnOK() {
-        when(bookingService.changeStatus(ONE_USER_ID, bookingDto.getId(), true)).thenReturn(bookingDto);
+    @Nested
+    @DisplayName("Tests for GET requests")
+    class testGetRequests {
+        @SneakyThrows
+        @Test
+        void getAllBookings_withValidId_thenReturnOK() {
+            when(bookingService.getByBooker(ONE_USER_ID, BookingSelectionState.ALL)).thenReturn(List.of(bookingDto));
 
-        mvc.perform(patch("/bookings/{bookingId}", bookingDto.getId())
-                        .header(USER_ID, ONE_USER_ID)
-                        .param("approved", String.valueOf(true))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(BookingStatus.APPROVED.name()));
+            mvc.perform(get("/bookings")
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .param("state", String.valueOf(BookingSelectionState.ALL))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(mapper.writeValueAsString(List.of(bookingDto))));
 
-        verify(bookingService, times(1)).changeStatus(ONE_USER_ID, bookingDto.getId(), true);
-    }
+            verify(bookingService, times(1)).getByBooker(ONE_USER_ID, BookingSelectionState.ALL);
+        }
 
-    @SneakyThrows
-    @Test
-    void getAllBookings_withValidId_thenReturnOK() {
-        when(bookingService.getByBooker(ONE_USER_ID, BookingSelectionState.ALL)).thenReturn(List.of(bookingDto));
+        @SneakyThrows
+        @Test
+        void getAllBookingsByOwner_withValidId_thenReturnOK() {
+            when(bookingService.getByOwner(ONE_USER_ID, BookingSelectionState.ALL)).thenReturn(List.of(bookingDto));
 
-        mvc.perform(get("/bookings")
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("state", String.valueOf(BookingSelectionState.ALL))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(bookingDto))));
+            mvc.perform(get("/bookings/owner")
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .param("state", String.valueOf(BookingSelectionState.ALL))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(mapper.writeValueAsString(List.of(bookingDto))));
 
-        verify(bookingService, times(1)).getByBooker(ONE_USER_ID, BookingSelectionState.ALL);
-    }
+            verify(bookingService, times(1)).getByOwner(ONE_USER_ID, BookingSelectionState.ALL);
+        }
 
-    @SneakyThrows
-    @Test
-    void getAllBookingsByOwner_withValidId_thenReturnOK() {
-        when(bookingService.getByOwner(ONE_USER_ID, BookingSelectionState.ALL)).thenReturn(List.of(bookingDto));
+        @SneakyThrows
+        @Test
+        void findById_withValidId_thenReturnOK() {
+            when(bookingService.getById(ONE_USER_ID, bookingDto.getId())).thenReturn(bookingDto);
 
-        mvc.perform(get("/bookings/owner")
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("state", String.valueOf(BookingSelectionState.ALL))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(bookingDto))));
+            mvc.perform(get("/bookings/{bookingId}", bookingDto.getId())
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(mapper.writeValueAsString(bookingDto)));
 
-        verify(bookingService, times(1)).getByOwner(ONE_USER_ID, BookingSelectionState.ALL);
-    }
-
-    @SneakyThrows
-    @Test
-    void findById_withValidId_thenReturnOK() {
-        when(bookingService.getById(ONE_USER_ID, bookingDto.getId())).thenReturn(bookingDto);
-
-        mvc.perform(get("/bookings/{bookingId}", bookingDto.getId())
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(bookingDto)));
-
-        verify(bookingService, times(1)).getById(ONE_USER_ID, bookingDto.getId());
+            verify(bookingService, times(1)).getById(ONE_USER_ID, bookingDto.getId());
+        }
     }
 }

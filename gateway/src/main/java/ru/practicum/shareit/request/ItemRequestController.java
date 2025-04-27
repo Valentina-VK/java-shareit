@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.shareit.request.dto.NewItemRequestDto;
 
+import static ru.practicum.shareit.util.Constants.ERROR_USER_ID;
 import static ru.practicum.shareit.util.Constants.USER_ID;
 
 @RestController
@@ -27,7 +28,7 @@ public class ItemRequestController {
 
     @PostMapping
     public ResponseEntity<Object> create(@RequestHeader(USER_ID)
-                                         @Positive(message = "Id пользователя должен быть положительным числом") Long userId,
+                                         @Positive(message = ERROR_USER_ID) Long userId,
                                          @Valid @RequestBody NewItemRequestDto newItemRequestDto) {
         log.info("Create request on item, user id: {}", userId);
         return itemRequestClient.createItemRequest(userId, newItemRequestDto);
@@ -35,7 +36,7 @@ public class ItemRequestController {
 
     @GetMapping
     public ResponseEntity<Object> getAllByUser(@RequestHeader(USER_ID)
-                                               @Positive(message = "Id пользователя должен быть положительным числом") Long userId) {
+                                               @Positive(message = ERROR_USER_ID) Long userId) {
         log.info("Get all requests on items, by user id: {}", userId);
         return itemRequestClient.getAllByUser(userId);
     }

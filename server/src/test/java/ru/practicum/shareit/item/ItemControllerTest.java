@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -75,182 +77,198 @@ class ItemControllerTest {
         newCommentDto.setText("New comment");
     }
 
-    @SneakyThrows
-    @Test
-    void getAll_withValidUserIdInHeader_thenReturnOk() {
+    @Nested
+    @DisplayName("Tests for GET requests")
+    class testGetRequests {
+        @SneakyThrows
+        @Test
+        void getAll_withValidUserIdInHeader_thenReturnOk() {
 
-        when(itemService.getAll(ONE_USER_ID)).thenReturn(List.of(itemDto));
+            when(itemService.getAll(ONE_USER_ID)).thenReturn(List.of(itemDto));
 
-        mvc.perform(get("/items")
-                        .header(USER_ID, ONE_USER_ID)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()", is(1)))
-                .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+            mvc.perform(get("/items")
+                            .header(USER_ID, ONE_USER_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()", is(1)))
+                    .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
 
-        verify(itemService).getAll(ONE_USER_ID);
+            verify(itemService).getAll(ONE_USER_ID);
+        }
+
+        @SneakyThrows
+        @Test
+        void get_withValidItemId_thenReturnOk() {
+            when(itemService.get(ONE_USER_ID, ITEM_ID)).thenReturn(itemBookingDatesDto);
+
+            mvc.perform(get("/items/{itemId}", ITEM_ID)
+                            .header(USER_ID, ONE_USER_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(mapper.writeValueAsString(itemBookingDatesDto)));
+
+            verify(itemService).get(ONE_USER_ID, ITEM_ID);
+        }
+
+        @SneakyThrows
+        @Test
+        void get_withNotExistingItemId_thenReturnNotFound() {
+            when(itemService.get(ONE_USER_ID, NOT_EXISTING_ID)).thenThrow(NotFoundException.class);
+
+            mvc.perform(get("/items/{itemId}", NOT_EXISTING_ID)
+                            .header(USER_ID, ONE_USER_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            verify(itemService).get(ONE_USER_ID, NOT_EXISTING_ID);
+        }
+
+        @SneakyThrows
+        @Test
+        void search_withText_thenReturnOk() {
+            when(itemService.search(ONE_USER_ID, "testText")).thenReturn(List.of(itemDto));
+
+            mvc.perform(get("/items/search")
+                            .header(USER_ID, ONE_USER_ID)
+                            .param("text", "testText")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()", is(1)))
+                    .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+
+            verify(itemService).search(ONE_USER_ID, "testText");
+        }
+
+        @SneakyThrows
+        @Test
+        void search_withoutText_thenReturnOk() {
+            when(itemService.search(ONE_USER_ID, null)).thenReturn(List.of());
+
+            mvc.perform(get("/items/search")
+                            .header(USER_ID, ONE_USER_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()", is(0)))
+                    .andExpect(content().json(mapper.writeValueAsString(List.of())));
+
+            verify(itemService).search(ONE_USER_ID, null);
+        }
     }
 
-    @SneakyThrows
-    @Test
-    void get_withValidItemId_thenReturnOk() {
-        when(itemService.get(ONE_USER_ID, ITEM_ID)).thenReturn(itemBookingDatesDto);
+    @Nested
+    @DisplayName("Tests for POST requests")
+    class testPostRequests {
+        @SneakyThrows
+        @Test
+        void add_withValidBody_thenReturnOK() {
+            when(itemService.save(ONE_USER_ID, itemDto)).thenReturn(itemDto);
+            String itemInJson = mapper.writeValueAsString(itemDto);
 
-        mvc.perform(get("/items/{itemId}", ITEM_ID)
-                        .header(USER_ID, ONE_USER_ID)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(itemBookingDatesDto)));
+            mvc.perform(post("/items")
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(itemInJson))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(itemInJson));
 
-        verify(itemService).get(ONE_USER_ID, ITEM_ID);
+            verify(itemService, times(1)).save(ONE_USER_ID, itemDto);
+        }
+
+        @SneakyThrows
+        @Test
+        void create_withUserIdIsBookerIdAndBookingInPast_thenReturnOk() {
+            when(commentService.create(ONE_USER_ID, ITEM_ID, newCommentDto)).thenReturn(commentDto);
+
+            mvc.perform(post("/items/{id}/comment", ITEM_ID)
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(newCommentDto)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(mapper.writeValueAsString(commentDto)));
+
+            verify(commentService, times(1)).create(ONE_USER_ID, ITEM_ID, newCommentDto);
+        }
+
+        @SneakyThrows
+        @Test
+        void create_withUserIdIsNotBookerIdOrNotBookingInPast_thenReturnForbidden() {
+
+            when(commentService.create(ONE_USER_ID, ITEM_ID, newCommentDto)).thenThrow(NoAccessException.class);
+
+            mvc.perform(post("/items/{id}/comment", ITEM_ID)
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(newCommentDto)))
+                    .andExpect(status().isForbidden());
+
+            verify(commentService, times(1)).create(ONE_USER_ID, ITEM_ID, newCommentDto);
+        }
     }
 
-    @SneakyThrows
-    @Test
-    void get_withNotExistingItemId_thenReturnNotFound() {
-        when(itemService.get(ONE_USER_ID, NOT_EXISTING_ID)).thenThrow(NotFoundException.class);
+    @Nested
+    @DisplayName("Tests for PATCH requests")
+    class testPatchRequests {
+        @SneakyThrows
+        @Test
+        void update_withUserIdIsOwnerId_thenReturnOk() {
+            when(itemService.update(ONE_USER_ID, ITEM_ID, itemDto)).thenReturn(itemDto);
+            String itemInJson = mapper.writeValueAsString(itemDto);
 
-        mvc.perform(get("/items/{itemId}", NOT_EXISTING_ID)
-                        .header(USER_ID, ONE_USER_ID)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            mvc.perform(patch("/items/{itemId}", ITEM_ID)
+                            .header(USER_ID, ONE_USER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(itemInJson))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(itemInJson));
 
-        verify(itemService).get(ONE_USER_ID, NOT_EXISTING_ID);
+            verify(itemService, times(1)).update(ONE_USER_ID, ITEM_ID, itemDto);
+        }
+
+        @SneakyThrows
+        @Test
+        void update_withUserIdIsNotOwnerId_thenReturnForbidden() {
+            when(itemService.update(NOT_OWNER_ID, ITEM_ID, itemDto)).thenThrow(NoAccessException.class);
+            String itemInJson = mapper.writeValueAsString(itemDto);
+
+            mvc.perform(patch("/items/{itemId}", ITEM_ID)
+                            .header(USER_ID, NOT_OWNER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(itemInJson))
+                    .andExpect(status().isForbidden());
+
+            verify(itemService, times(1)).update(NOT_OWNER_ID, ITEM_ID, itemDto);
+        }
     }
 
-    @SneakyThrows
-    @Test
-    void search_withText_thenReturnOk() {
-        when(itemService.search(ONE_USER_ID, "testText")).thenReturn(List.of(itemDto));
+    @Nested
+    @DisplayName("Tests for DELETE requests")
+    class testDeleteRequests {
+        @SneakyThrows
+        @Test
+        void delete_withUserIdIsOwnerId_thenReturnOK() {
 
-        mvc.perform(get("/items/search")
-                        .header(USER_ID, ONE_USER_ID)
-                        .param("text", "testText")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()", is(1)))
-                .andExpect(content().json(mapper.writeValueAsString(List.of(itemDto))));
+            mvc.perform(delete("/items/{itemId}", ITEM_ID)
+                            .header(USER_ID, ONE_USER_ID))
+                    .andExpect(status().isOk());
 
-        verify(itemService).search(ONE_USER_ID, "testText");
-    }
+            verify(itemService, times(1)).delete(ONE_USER_ID, ITEM_ID);
+        }
 
-    @SneakyThrows
-    @Test
-    void search_withoutText_thenReturnOk() {
-        when(itemService.search(ONE_USER_ID, null)).thenReturn(List.of());
+        @SneakyThrows
+        @Test
+        void delete_withUserIdIsNotOwnerId_thenReturnForbidden() {
+            doThrow(NoAccessException.class).when(itemService).delete(NOT_OWNER_ID, ITEM_ID);
 
-        mvc.perform(get("/items/search")
-                        .header(USER_ID, ONE_USER_ID)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()", is(0)))
-                .andExpect(content().json(mapper.writeValueAsString(List.of())));
+            mvc.perform(delete("/items/{itemId}", ITEM_ID)
+                            .header(USER_ID, NOT_OWNER_ID))
+                    .andExpect(status().isForbidden());
 
-        verify(itemService).search(ONE_USER_ID, null);
-    }
-
-    @SneakyThrows
-    @Test
-    void add_withValidBody_thenReturnOK() {
-        when(itemService.save(ONE_USER_ID, itemDto)).thenReturn(itemDto);
-        String itemInJson = mapper.writeValueAsString(itemDto);
-
-        mvc.perform(post("/items")
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(itemInJson))
-                .andExpect(status().isOk())
-                .andExpect(content().json(itemInJson));
-
-        verify(itemService, times(1)).save(ONE_USER_ID, itemDto);
-    }
-
-    @SneakyThrows
-    @Test
-    void update_withUserIdIsOwnerId_thenReturnOk() {
-        when(itemService.update(ONE_USER_ID, ITEM_ID, itemDto)).thenReturn(itemDto);
-        String itemInJson = mapper.writeValueAsString(itemDto);
-
-        mvc.perform(patch("/items/{itemId}", ITEM_ID)
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(itemInJson))
-                .andExpect(status().isOk())
-                .andExpect(content().json(itemInJson));
-
-        verify(itemService, times(1)).update(ONE_USER_ID, ITEM_ID, itemDto);
-    }
-
-    @SneakyThrows
-    @Test
-    void update_withUserIdIsNotOwnerId_thenReturnForbidden() {
-        when(itemService.update(NOT_OWNER_ID, ITEM_ID, itemDto)).thenThrow(NoAccessException.class);
-        String itemInJson = mapper.writeValueAsString(itemDto);
-
-        mvc.perform(patch("/items/{itemId}", ITEM_ID)
-                        .header(USER_ID, NOT_OWNER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(itemInJson))
-                .andExpect(status().isForbidden());
-
-        verify(itemService, times(1)).update(NOT_OWNER_ID, ITEM_ID, itemDto);
-    }
-
-    @SneakyThrows
-    @Test
-    void delete_withUserIdIsOwnerId_thenReturnOK() {
-
-        mvc.perform(delete("/items/{itemId}", ITEM_ID)
-                        .header(USER_ID, ONE_USER_ID))
-                .andExpect(status().isOk());
-
-        verify(itemService, times(1)).delete(ONE_USER_ID, ITEM_ID);
-    }
-
-    @SneakyThrows
-    @Test
-    void delete_withUserIdIsNotOwnerId_thenReturnForbidden() {
-        doThrow(NoAccessException.class).when(itemService).delete(NOT_OWNER_ID, ITEM_ID);
-
-        mvc.perform(delete("/items/{itemId}", ITEM_ID)
-                        .header(USER_ID, NOT_OWNER_ID))
-                .andExpect(status().isForbidden());
-
-        verify(itemService, times(1)).delete(NOT_OWNER_ID, ITEM_ID);
-    }
-
-    @SneakyThrows
-    @Test
-    void create_withUserIdIsBookerIdAndBookingInPast_thenReturnOk() {
-        when(commentService.create(ONE_USER_ID, ITEM_ID, newCommentDto)).thenReturn(commentDto);
-
-        mvc.perform(post("/items/{id}/comment", ITEM_ID)
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(newCommentDto)))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(commentDto)));
-
-        verify(commentService, times(1)).create(ONE_USER_ID, ITEM_ID, newCommentDto);
-    }
-
-    @SneakyThrows
-    @Test
-    void create_withUserIdIsNotBookerIdOrNotBookingInPast_thenReturnForbidden() {
-
-        when(commentService.create(ONE_USER_ID, ITEM_ID, newCommentDto)).thenThrow(NoAccessException.class);
-
-        mvc.perform(post("/items/{id}/comment", ITEM_ID)
-                        .header(USER_ID, ONE_USER_ID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(newCommentDto)))
-                .andExpect(status().isForbidden());
-
-        verify(commentService, times(1)).create(ONE_USER_ID, ITEM_ID, newCommentDto);
+            verify(itemService, times(1)).delete(NOT_OWNER_ID, ITEM_ID);
+        }
     }
 }

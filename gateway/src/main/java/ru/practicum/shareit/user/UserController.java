@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.util.Marker;
 
+import static ru.practicum.shareit.util.Constants.ERROR_USER_ID;
+
 @RestController
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<Object> get(@PathVariable
-                                      @Positive(message = "Id пользователя должен быть положительным числом") Long userId) {
+                                      @Positive(message = ERROR_USER_ID) Long userId) {
         log.info("Get user by id: {}", userId);
         return userClient.getById(userId);
     }
@@ -48,7 +50,7 @@ public class UserController {
 
     @PatchMapping("/{userId}")
     public ResponseEntity<Object> update(@PathVariable
-                                         @Positive(message = "Id пользователя должен быть положительным числом") Long userId,
+                                         @Positive(message = ERROR_USER_ID) Long userId,
                                          @Valid @RequestBody UserDto user) {
         log.info("Update user by id: {}", userId);
         return userClient.update(userId, user);
@@ -56,7 +58,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Object> delete(@PathVariable
-                                         @Positive(message = "Id пользователя должен быть положительным числом") Long userId) {
+                                         @Positive(message = ERROR_USER_ID) Long userId) {
         log.info("Delete user by id: {}", userId);
         userClient.deleteById(userId);
         return new ResponseEntity<Object>(HttpStatus.OK);
