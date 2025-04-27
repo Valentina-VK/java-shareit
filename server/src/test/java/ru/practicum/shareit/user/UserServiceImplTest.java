@@ -50,7 +50,7 @@ class UserServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - getAll")
-    class testGetAll {
+    class TestGetAll {
         @Test
         void getAllTest() {
 
