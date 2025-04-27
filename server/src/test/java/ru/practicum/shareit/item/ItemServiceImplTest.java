@@ -61,7 +61,7 @@ class ItemServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - getAll")
-    class testGetAll {
+    class TestGetAll {
         @Test
         void getAll_withValidUserId_thenReturnRightResult() {
 
@@ -79,7 +79,7 @@ class ItemServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - get")
-    class testGet {
+    class TestGet {
         @Test
         void get_withUserIdIsOwnerIdAndItemExist_thenReturnItemWithDatesOfBooking() {
             ItemBookingDatesDto result = itemService.get(existingItem.getOwnerId(), existingItem.getId());
@@ -113,7 +113,7 @@ class ItemServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - search")
-    class testSearch {
+    class TestSearch {
         @Test
         void search_withValidUserIdAndSuitableText_thenReturnRightResult() {
             List<ItemDto> result = itemService.search(existingItem.getOwnerId(), "item1");
@@ -138,7 +138,7 @@ class ItemServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - save")
-    class testSave {
+    class TestSave {
         @Test
         void save_withValidUserIdAndItemDto_thenReturnCreatedItem() {
             ItemDto newItem = new ItemDto();
@@ -168,7 +168,7 @@ class ItemServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - update")
-    class testUpdate {
+    class TestUpdate {
         @Test
         void update_withUserIdIsOwnerIdAndExistingItemId_thenReturnUpdatedItem() {
             ItemDto newItem = new ItemDto();
@@ -201,7 +201,7 @@ class ItemServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - delete")
-    class testDelete {
+    class TestDelete {
         @Test
         void delete_withUserIdIsOwnerIdAndExistingItemId_thenEndCorrectly() {
             itemService.delete(existingItem.getOwnerId(), existingItem.getId());

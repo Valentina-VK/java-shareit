@@ -57,7 +57,7 @@ class ItemRequestControllerTest {
 
     @Nested
     @DisplayName("Tests for POST requests")
-    class testPostRequests {
+    class TestPostRequests {
         @SneakyThrows
         @Test
         void create_test() {
@@ -77,7 +77,7 @@ class ItemRequestControllerTest {
 
     @Nested
     @DisplayName("Tests for GET requests")
-    class testGetRequests {
+    class TestGetRequests {
         @SneakyThrows
         @Test
         void getAllByUser_test() {

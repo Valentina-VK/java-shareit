@@ -79,7 +79,7 @@ class ItemControllerTest {
 
     @Nested
     @DisplayName("Tests for GET requests")
-    class testGetRequests {
+    class TestGetRequests {
         @SneakyThrows
         @Test
         void getAll_withValidUserIdInHeader_thenReturnOk() {
@@ -157,7 +157,7 @@ class ItemControllerTest {
 
     @Nested
     @DisplayName("Tests for POST requests")
-    class testPostRequests {
+    class TestPostRequests {
         @SneakyThrows
         @Test
         void add_withValidBody_thenReturnOK() {
@@ -210,7 +210,7 @@ class ItemControllerTest {
 
     @Nested
     @DisplayName("Tests for PATCH requests")
-    class testPatchRequests {
+    class TestPatchRequests {
         @SneakyThrows
         @Test
         void update_withUserIdIsOwnerId_thenReturnOk() {
@@ -247,7 +247,7 @@ class ItemControllerTest {
 
     @Nested
     @DisplayName("Tests for DELETE requests")
-    class testDeleteRequests {
+    class TestDeleteRequests {
         @SneakyThrows
         @Test
         void delete_withUserIdIsOwnerId_thenReturnOK() {

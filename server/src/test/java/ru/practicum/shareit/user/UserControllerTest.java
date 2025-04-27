@@ -54,7 +54,7 @@ class UserControllerTest {
 
     @Nested
     @DisplayName("Tests for GET requests")
-    class testGetRequests {
+    class TestGetRequests {
         @SneakyThrows
         @Test
         void getAllTest() {
@@ -96,7 +96,7 @@ class UserControllerTest {
 
     @Nested
     @DisplayName("Tests for POST requests")
-    class testPostRequests {
+    class TestPostRequests {
         @SneakyThrows
         @Test
         void add_withValidFieldsInBody_thenReturnCreated() {
@@ -141,7 +141,7 @@ class UserControllerTest {
 
     @Nested
     @DisplayName("Tests for PATCH requests")
-    class testPatchRequests {
+    class TestPatchRequests {
         @SneakyThrows
         @Test
         void update_withValidFieldsInBody_thenReturnOk() {
@@ -231,7 +231,7 @@ class UserControllerTest {
 
     @Nested
     @DisplayName("Tests for DELETE requests")
-    class testDeleteRequests {
+    class TestDeleteRequests {
         @SneakyThrows
         @Test
         void delete_withValidUserId_thenReturnOk() {

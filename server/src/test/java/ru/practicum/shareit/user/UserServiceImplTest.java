@@ -63,7 +63,7 @@ class UserServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - get")
-    class testGet {
+    class TestGet {
 
         @Test
         void get_withValidId_thenRightResult() {
@@ -84,7 +84,7 @@ class UserServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - save")
-    class testSave {
+    class TestSave {
 
         @Test
         void save_withValidFields_thenRightResult() {
@@ -107,7 +107,7 @@ class UserServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - update")
-    class testUpdate {
+    class TestUpdate {
 
         @Test
         void update_withValidFields_thenRightResult() {
@@ -143,7 +143,7 @@ class UserServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - delete")
-    class testDelete {
+    class TestDelete {
 
         @Test
         void delete_withAnyLongUserId_thenReturnOk() {

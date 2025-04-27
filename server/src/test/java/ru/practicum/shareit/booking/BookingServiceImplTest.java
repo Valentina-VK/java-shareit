@@ -72,7 +72,7 @@ class BookingServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - addBooking")
-    class testAddBooking {
+    class TestAddBooking {
         @Test
         void addBooking_withValidFields_thenReturnResult() {
 
@@ -110,7 +110,7 @@ class BookingServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - changeStatus")
-    class testChangeStatus {
+    class TestChangeStatus {
         @Test
         void changeStatus_withUserIdIsOwnerIdAndBookingExist_thenReturnResult() {
             existingBooking.setStatus(BookingStatus.REJECTED);
@@ -136,7 +136,7 @@ class BookingServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - getById")
-    class testGetById {
+    class TestGetById {
         @Test
         void getById_withValidId_thenReturnResult() {
 
@@ -162,7 +162,7 @@ class BookingServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - getByBooker")
-    class testGetByBooker {
+    class TestGetByBooker {
 
         @ParameterizedTest
         @EnumSource(value = BookingSelectionState.class)
@@ -183,7 +183,7 @@ class BookingServiceImplTest {
 
     @Nested
     @DisplayName("Tests for method - getByOwner")
-    class testGetByOwner {
+    class TestGetByOwner {
 
         @ParameterizedTest
         @EnumSource(value = BookingSelectionState.class)

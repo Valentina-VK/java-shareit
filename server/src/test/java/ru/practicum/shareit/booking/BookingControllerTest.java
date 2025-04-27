@@ -66,7 +66,7 @@ class BookingControllerTest {
 
     @Nested
     @DisplayName("Tests for POST requests")
-    class testPostRequests {
+    class TestPostRequests {
         @SneakyThrows
         @Test
         void create_withValidBody_thenReturnOK() {
@@ -102,7 +102,7 @@ class BookingControllerTest {
 
     @Nested
     @DisplayName("Tests for PATCH requests")
-    class testPatchRequests {
+    class TestPatchRequests {
         @SneakyThrows
         @Test
         void changeStatus_withValidParameter_thenReturnOK() {
@@ -121,7 +121,7 @@ class BookingControllerTest {
 
     @Nested
     @DisplayName("Tests for GET requests")
-    class testGetRequests {
+    class TestGetRequests {
         @SneakyThrows
         @Test
         void getAllBookings_withValidId_thenReturnOK() {
